@@ -1,0 +1,116 @@
+name: check
+
+# pull_request_target takes this file and tools/ from main, so a pull request cannot change its own check.
+# The pull request is only read as data: nothing from it is run.
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+  # refreshes the install counts in the list
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      merge: ${{ steps.pull_request.outputs.merge }}
+    steps:
+      - name: Take the rules from main
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: base
+          persist-credentials: false
+
+      # the merge of the pull request into main: exactly what main would become, and its own changes only
+      - name: Take the pull request as data
+        if: github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git init -q pr
+          cd pr
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY"
+          for attempt in 1 2 3 4 5 6; do
+            # GitHub rebuilds the merge only when someone asks about the pull request
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$NUMBER" --jq .mergeable > /dev/null
+            git fetch -q --depth=2 origin "refs/pull/$NUMBER/merge"
+            if [ "$(git rev-parse FETCH_HEAD^2)" = "$HEAD" ]; then
+              git -c advice.detachedHead=false checkout -q FETCH_HEAD
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "GitHub has no merge of this commit yet: push again or fix the conflict" >&2
+          exit 1
+
+      - name: Install the Lua syntax checker
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lua5.4
+
+      - name: Test the rules
+        run: python3 base/tools/test_check.py
+
+      - name: Check the pull request
+        id: pull_request
+        if: github.event_name == 'pull_request_target'
+        env:
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: python3 base/tools/check.py pr --base base --author "$AUTHOR" --ci
+
+      - name: Check main
+        if: github.event_name != 'pull_request_target'
+        run: python3 base/tools/check.py base --ci
+
+  # A pull request that passed and changes only mods goes in by itself, and the list is rebuilt.
+  # Removing a mod by hand on main rebuilds the list too. Commits made here start no new runs.
+  publish:
+    needs: check
+    if: github.event_name != 'pull_request_target' || needs.check.outputs.merge == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: publish
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Merge exactly the commit that was checked
+        if: github.event_name == 'pull_request_target'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: gh pr merge "$NUMBER" --repo "$GITHUB_REPOSITORY" --squash --match-head-commit "$HEAD"
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+
+      - name: Put mods into releases and build the list
+        run: python3 tools/publish.py . catalog.json
+
+      - name: Publish the list
+        run: |
+          git add catalog.json
+          if git diff --cached --quiet; then
+            echo "The list has not changed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update the list of mods"
+          git pull --rebase origin main
+          git push
