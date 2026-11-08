@@ -1,0 +1,1 @@
+# GitHub logins that may not add mods, one per line.
