@@ -1,0 +1,7 @@
+{
+ "kind": "script",
+ "name": "Pipeline test",
+ "version": "1.0",
+ "license": "MIT",
+ "description": { "en": "Test of the mods pipeline, removed right after", "ru": "Проверка публикации модов, сразу будет удалена" }
+}
