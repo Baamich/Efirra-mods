@@ -9,6 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modlib  # noqa: E402
+import publish  # noqa: E402
 
 LUAC = shutil.which("luac5.4") or shutil.which("luac")
 
@@ -263,6 +264,50 @@ class Change(Case):
         add_developer(self.other)
         add_developer(self.root, developer={"github": "other"})
         self.assertEqual(self.change("baamich"), [])
+
+
+class Publish(unittest.TestCase):
+    def mod(self, data=b"-- script", version="1.0"):
+        return {
+            "id": "anna-timer", "kind": "script", "name": "Timer", "author": "anna", "version": version,
+            "license": "MIT", "description": {"en": "x"}, "main": "mods/anna/timer/main.lua",
+            "homepage": "mods/anna/timer", "data": data,
+        }
+
+    def test_a_new_mod_gets_a_release_and_a_file(self):
+        entries, create, upload, stale = publish.plan([self.mod()], [])
+        self.assertEqual(create, [("mod-anna-timer", "Timer")])
+        self.assertEqual(len(upload), 1)
+        self.assertEqual(stale, [])
+        entry = entries[0]
+        self.assertEqual(entry["installs"], 0)
+        self.assertEqual(entry["size"], 9)
+        self.assertNotIn("data", entry)
+        self.assertTrue(entry["url"].startswith(
+            "https://github.com/Baamich/Sielo-mods/releases/download/mod-anna-timer/anna-timer-1.0-"))
+        self.assertTrue(entry["url"].endswith(".lua"))
+
+    def test_installs_add_up_across_versions(self):
+        first = publish.plan([self.mod()], [])[2][0][1]
+        releases = [{"tag_name": "mod-anna-timer", "assets": [
+            {"name": first, "download_count": 40}, {"name": "older.lua", "download_count": 2},
+        ]}]
+        entries, create, upload, stale = publish.plan([self.mod()], releases)
+        self.assertEqual(entries[0]["installs"], 42)
+        self.assertEqual((create, upload, stale), ([], [], []))
+
+    def test_changed_bytes_are_a_new_file(self):
+        first = publish.plan([self.mod()], [])[2][0][1]
+        releases = [{"tag_name": "mod-anna-timer", "assets": [{"name": first, "download_count": 1}]}]
+        entries, create, upload, stale = publish.plan([self.mod(b"-- changed")], releases)
+        self.assertEqual(create, [])
+        self.assertEqual(len(upload), 1)
+        self.assertNotEqual(upload[0][1], first)
+        self.assertEqual(entries[0]["installs"], 1)
+
+    def test_a_removed_mod_loses_its_release_and_others_stay(self):
+        releases = [{"tag_name": "mod-gone", "assets": []}, {"tag_name": "v1.0", "assets": []}]
+        self.assertEqual(publish.plan([], releases)[3], ["mod-gone"])
 
 
 if __name__ == "__main__":
