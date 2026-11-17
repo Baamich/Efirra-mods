@@ -15,7 +15,7 @@
    "sha256": "943a5f901c0ff797f677a15126b3286ae9c7cc7146b06a03571895210bbc442d",
    "size": 159,
    "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/night-sky",
-   "installs": 0,
+   "installs": 2,
    "verified": true,
    "official": false,
    "screenshots": [
@@ -46,7 +46,7 @@
    "sha256": "02a5ac586756827e39d9b8701e7dde6e2226ef1ea52e654b007cebdf74d93a19",
    "size": 118382,
    "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/star-alert",
-   "installs": 0,
+   "installs": 2,
    "verified": true,
    "official": false,
    "screenshots": [
@@ -77,7 +77,7 @@
    "sha256": "7d73f4b1cfc014cba96e6f5baab350c70fd0f9598d37c271e1abdccf9fdba911",
    "size": 3923,
    "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/stream-notes",
-   "installs": 0,
+   "installs": 2,
    "verified": true,
    "official": false,
    "screenshots": [
@@ -108,7 +108,7 @@
    "sha256": "0f3728b33aa4f80c879308939d158fcf9986d6bd1ae513810e110ea3cbc28177",
    "size": 4527,
    "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/official/counters",
-   "installs": 0,
+   "installs": 3,
    "verified": true,
    "official": true,
    "screenshots": [
