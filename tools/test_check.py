@@ -184,7 +184,7 @@ class Tree(Case):
         add_developer(self.root)
         add_script(self.root)
         os.symlink("/etc/passwd", os.path.join(self.root, "mods/anna/timer/README.md"))
-        self.assert_problem("no folders or links")
+        self.assert_problem("no other folders or links")
 
 
 def alert_bytes(files=(("a.png", b"png"),), path="file:0", kind=None):
