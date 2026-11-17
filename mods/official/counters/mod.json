@@ -1,0 +1,10 @@
+{
+  "kind": "panel",
+  "name": "Counters",
+  "version": "1.0",
+  "license": "MIT",
+  "description": {
+    "en": "Counters for the stream: deaths, wins, whatever you count. Name them, click + and −, everything is remembered. Works offline.",
+    "ru": "Счётчики для эфира: смерти, победы, что угодно. Назови, нажимай + и −, всё запоминается. Работает без интернета."
+  }
+}

@@ -126,7 +126,7 @@ class Tree(Case):
         add_developer(self.root)
         add_script(self.root)
         write(self.root, "mods/anna/timer/deep/main.lua", "x")
-        self.assert_problem("no folders")
+        self.assert_problem("no other folders")
 
     def test_compiled_lua_is_refused(self):
         add_developer(self.root)
@@ -187,6 +187,62 @@ class Tree(Case):
         self.assert_problem("no folders or links")
 
 
+def alert_bytes(files=(("a.png", b"png"),), path="file:0", kind=None):
+    import json as _json
+    kind = kind or {"type": "alert", "layers": [{"id": 1, "type": "media", "path": path, "x": 0, "y": 0, "w": 1, "h": 1}]}
+    header = _json.dumps({"name": "A", "kind": kind, "files": [{"name": n, "size": len(b)} for n, b in files]}).encode()
+    return b"EFIRRA-ALERT 1\n" + str(len(header)).encode() + b"\n" + header + b"".join(b for _, b in files)
+
+
+class Kinds(Case):
+    def add(self, kind, main, content):
+        add_developer(self.root)
+        write(self.root, "mods/anna/thing/mod.json", dict(MOD, kind=kind))
+        write(self.root, f"mods/anna/thing/{main}", content)
+
+    def test_a_good_theme_passes(self):
+        self.add("theme", "theme.json", {"accent": "#4fd08a", "controls": "#ffffff", "warm": "#f2b872",
+                                         "panels": "#121d19", "background": "#0a1210", "text": "#e8f3ed", "radius": 12})
+        errors, mods = modlib.validate_tree(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(mods[0]["kind"], "theme")
+        self.assertTrue(mods[0]["main"].endswith("theme.json"))
+
+    def test_a_theme_with_a_bad_color_is_refused(self):
+        self.add("theme", "theme.json", {"accent": "red", "controls": "#ffffff", "warm": "#f2b872",
+                                         "panels": "#121d19", "background": "#0a1210", "text": "#e8f3ed", "radius": 12})
+        self.assert_problem("colors look like")
+
+    def test_a_good_panel_passes(self):
+        self.add("panel", "panel.html", "<!doctype html><html><body>hi</body></html>")
+        self.assertEqual(self.errors(), [])
+
+    def test_a_panel_must_be_a_page(self):
+        self.add("panel", "panel.html", "just text")
+        self.assert_problem("must be an HTML page")
+
+    def test_a_good_alert_passes(self):
+        self.add("alert", "alert.efirra-alert", alert_bytes())
+        self.assertEqual(self.errors(), [])
+
+    def test_an_alert_with_a_program_inside_is_refused(self):
+        self.add("alert", "alert.efirra-alert", alert_bytes(files=(("virus.exe", b"MZ"),)))
+        self.assert_problem("only pictures, clips and sounds")
+
+    def test_an_alert_pointing_outside_is_refused(self):
+        self.add("alert", "alert.efirra-alert", alert_bytes(path="C:/Windows/win.ini"))
+        self.assert_problem("must be a file inside the alert")
+
+    def test_a_cut_alert_is_refused(self):
+        self.add("alert", "alert.efirra-alert", alert_bytes()[:-1])
+        self.assert_problem("file sizes do not match")
+
+    def test_a_kind_uses_only_its_own_main_file(self):
+        self.add("theme", "theme.json", "{}")
+        write(self.root, "mods/anna/thing/main.lua", "-- x")
+        self.assert_problem("a theme uses theme.json")
+
+
 class Change(Case):
     """self.other is the current repository, self.root is the pull request."""
 
@@ -206,8 +262,11 @@ class Change(Case):
         write(self.root, "catalog.json", "evil")
         write(self.root, ".github/workflows/x.yml", "evil")
         write(self.root, "tools/check.py", "evil")
+        # the green check is the owner's word: nobody else may give it
+        write(self.root, "verified.json", {"mods": {"x": {"version": "1", "sha256": "0" * 64}}})
+        write(self.root, "revoked.json", {"revoked": [{"sha256": "0" * 64}]})
         errors = self.change()
-        for path in ["catalog.json", ".github/workflows/x.yml", "tools/check.py"]:
+        for path in ["catalog.json", ".github/workflows/x.yml", "tools/check.py", "verified.json", "revoked.json"]:
             self.assert_problem(path, errors)
 
     def test_another_developers_folder_is_closed(self):
@@ -270,6 +329,85 @@ class Change(Case):
         self.assertEqual(self.change("baamich"), [])
 
 
+class Screenshots(Case):
+    PNG = b"\x89PNG\r\n\x1a\n" + b"\0" * 32
+    JPG = b"\xff\xd8\xff\xe0" + b"\0" * 32
+
+    def test_screenshots_are_listed_by_number(self):
+        add_developer(self.root)
+        add_script(self.root)
+        write(self.root, "mods/anna/timer/screenshots/10.png", self.PNG)
+        write(self.root, "mods/anna/timer/screenshots/2.jpg", self.JPG)
+        write(self.root, "mods/anna/timer/screenshots/1.png", self.PNG)
+        errors, mods = modlib.validate_tree(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual([p.rsplit("/", 1)[1] for p in mods[0]["screenshots"]], ["1.png", "2.jpg", "10.png"])
+
+    def test_bad_screenshots_are_refused(self):
+        add_developer(self.root)
+        add_script(self.root)
+        write(self.root, "mods/anna/timer/screenshots/1.png", self.JPG)
+        write(self.root, "mods/anna/timer/screenshots/shot.png", self.PNG)
+        write(self.root, "mods/anna/timer/screenshots/2.png", self.PNG)
+        write(self.root, "mods/anna/timer/screenshots/2.webp", self.PNG)
+        write(self.root, "mods/anna/timer/screenshots/3.exe", b"MZ")
+        errors = self.errors()
+        self.assert_problem("1.png: this is not a PNG picture", errors)
+        self.assert_problem("shot.png: name a screenshot by its number", errors)
+        self.assert_problem("2.webp: there is already a screenshot number 2", errors)
+        self.assert_problem("3.exe: name a screenshot by its number", errors)
+
+    def test_too_many_or_too_big_screenshots_are_refused(self):
+        add_developer(self.root)
+        add_script(self.root)
+        for n in range(1, 10):
+            write(self.root, f"mods/anna/timer/screenshots/{n}.png", self.PNG)
+        self.assert_problem("up to 8 screenshots")
+        write(self.root, "mods/anna/timer/screenshots/1.png", self.PNG + b"\0" * modlib.MAX_SCREENSHOT)
+        self.assert_problem("a screenshot is up to 2 MB")
+
+    def test_other_folders_are_still_refused(self):
+        add_developer(self.root)
+        add_script(self.root)
+        write(self.root, "mods/anna/timer/images/1.png", self.PNG)
+        self.assert_problem("images: only plain files and a screenshots folder")
+
+
+class Official(Case):
+    def change(self, author):
+        changed = modlib.changed_paths(self.other, self.root)
+        return modlib.validate_change(self.other, self.root, author, "Baamich", changed)
+
+    def test_official_mods_belong_to_the_owner(self):
+        add_developer(self.root, "official", {"github": "Baamich"})
+        add_script(self.root, "official", "timer")
+        errors, mods = modlib.validate_tree(self.root)
+        self.assertEqual(errors, [])
+        self.assertEqual(mods[0]["id"], "official-timer")
+        # чужой логин в официальной папке — ошибка в любом случае
+        add_developer(self.root, "official", {"github": "anna-gh"})
+        self.assert_problem("official mods belong to Baamich")
+
+    def test_nobody_else_may_touch_official(self):
+        add_developer(self.other, "official", {"github": "Baamich"})
+        add_script(self.other, "official", "timer")
+        add_developer(self.root, "official", {"github": "Baamich"})
+        add_script(self.root, "official", "timer", source="-- efirra: scenes\n-- changed\n")
+        errors = self.change("anna-gh")
+        self.assertTrue(any("only Baamich may change official mods" in e for e in errors), errors)
+        self.assertEqual(self.change("Baamich"), [])
+
+    def test_a_changed_theme_needs_a_new_version(self):
+        add_developer(self.other, "anna", DEVELOPER)
+        write(self.other, "mods/anna/sky/mod.json", {**MOD, "kind": "theme"})
+        write(self.other, "mods/anna/sky/theme.json", {"accent": "#ff0000"})
+        add_developer(self.root, "anna", DEVELOPER)
+        write(self.root, "mods/anna/sky/mod.json", {**MOD, "kind": "theme"})
+        write(self.root, "mods/anna/sky/theme.json", {"accent": "#00ff00"})
+        errors = self.change("anna-gh")
+        self.assertTrue(any("raise version" in e for e in errors), errors)
+
+
 class Publish(unittest.TestCase):
     def mod(self, data=b"-- script", version="1.0"):
         return {
@@ -291,6 +429,29 @@ class Publish(unittest.TestCase):
             "https://github.com/Baamich/Efirra-mods/releases/download/mod-anna-timer/anna-timer-1.0-"))
         self.assertTrue(entry["url"].endswith(".lua"))
 
+    def test_screenshots_go_to_the_release_and_do_not_count_as_installs(self):
+        mod = self.mod()
+        mod["shots"] = [{"data": b"one", "extension": ".png"}, {"data": b"two", "extension": ".webp"}]
+        entries, create, upload, stale = publish.plan([mod], [])
+        names = [u[1] for u in upload]
+        self.assertEqual(len(names), 3)
+        self.assertTrue(names[1].startswith("shot-anna-timer-1-") and names[1].endswith(".png"))
+        shots = entries[0]["screenshots"]
+        self.assertEqual([s["size"] for s in shots], [3, 3])
+        self.assertTrue(shots[1]["url"].endswith(names[2]))
+        releases = [{"tag_name": "mod-anna-timer", "assets": [
+            {"name": n, "download_count": 7} for n in names
+        ]}]
+        entries, create, upload, stale = publish.plan([mod], releases)
+        self.assertEqual(entries[0]["installs"], 7, "screenshot downloads are not installs")
+        self.assertEqual(upload, [])
+
+    def test_official_mods_are_always_checked(self):
+        mod = {**self.mod(), "id": "official-timer", "author": "official"}
+        entry = publish.plan([mod], [])[0][0]
+        self.assertTrue(entry["verified"] and entry["official"])
+        self.assertFalse(publish.plan([self.mod()], [])[0][0]["official"])
+
     def test_installs_add_up_across_versions(self):
         first = publish.plan([self.mod()], [])[2][0][1]
         releases = [{"tag_name": "mod-anna-timer", "assets": [
@@ -308,6 +469,44 @@ class Publish(unittest.TestCase):
         self.assertEqual(len(upload), 1)
         self.assertNotEqual(upload[0][1], first)
         self.assertEqual(entries[0]["installs"], 1)
+
+    def test_the_owners_mark_holds_only_for_the_checked_file(self):
+        import hashlib
+        sha = hashlib.sha256(b"-- script").hexdigest()
+        marks = {"anna-timer": {"version": "1.0", "sha256": sha}}
+        self.assertTrue(publish.plan([self.mod()], [], verified=marks)[0][0]["verified"])
+        self.assertFalse(publish.plan([self.mod(b"-- changed", "1.1")], [], verified=marks)[0][0]["verified"])
+        self.assertFalse(publish.plan([self.mod()], [])[0][0]["verified"])
+
+    def test_a_broken_marks_file_marks_nothing(self):
+        with tempfile.TemporaryDirectory() as root:
+            write(root, "verified.json", "{not json")
+            self.assertEqual(modlib.read_verified(root), {})
+            write(root, "verified.json", {"mods": {"a": {"version": "1", "sha256": "short"}, "b": "x"}})
+            self.assertEqual(modlib.read_verified(root), {})
+
+    def test_revoked_prints_are_read(self):
+        with tempfile.TemporaryDirectory() as root:
+            good = "ab" * 32
+            write(root, "revoked.json", {"revoked": [{"sha256": good.upper(), "reason": "x"}, {"sha256": "short"}, "bad"]})
+            self.assertEqual(modlib.read_revoked(root), [good])
+            write(root, "revoked.json", "{broken")
+            self.assertEqual(modlib.read_revoked(root), [])
+
+    def test_a_revocation_can_be_taken_back(self):
+        import revoke
+        with tempfile.TemporaryDirectory() as root:
+            old = revoke.FILE
+            revoke.FILE = os.path.join(root, "revoked.json")
+            try:
+                sha = "cd" * 32
+                self.assertEqual(revoke.main(["--sha", sha, "test"]), 0)
+                self.assertEqual(modlib.read_revoked(root), [sha])
+                self.assertEqual(revoke.main(["--undo", "nobody"]), 1)
+                self.assertEqual(revoke.main(["--undo", sha]), 0)
+                self.assertEqual(modlib.read_revoked(root), [])
+            finally:
+                revoke.FILE = old
 
     def test_a_removed_mod_loses_its_release_and_others_stay(self):
         releases = [{"tag_name": "mod-gone", "assets": []}, {"tag_name": "v1.0", "assets": []}]

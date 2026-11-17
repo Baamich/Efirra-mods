@@ -17,10 +17,16 @@ import modlib  # noqa: E402
 
 REPOSITORY = "Baamich/Efirra-mods"
 TAG_PREFIX = "mod-"
+# screenshots live in the same release; their downloads are not installs
+SHOT_PREFIX = "shot-"
 
 
-def plan(mods, releases, repository=REPOSITORY):
-    """What has to happen. mods carry their file in data; releases are as the GitHub API gives them."""
+def plan(mods, releases, repository=REPOSITORY, verified=None):
+    """What has to happen. mods carry their file in data; releases are as the GitHub API gives them.
+
+    verified comes from verified.json: a mod is marked only while its file is byte for byte the one the owner checked.
+    """
+    verified = verified or {}
     known = {r["tag_name"]: r for r in releases if r["tag_name"].startswith(TAG_PREFIX)}
     entries, create, upload = [], [], []
     for mod in mods:
@@ -31,10 +37,22 @@ def plan(mods, releases, repository=REPOSITORY):
         # a new file is a new name, so an old list never points at different bytes
         asset = f"{mod['id']}-{mod['version']}-{sha[:12]}{extension}"
         assets = known.get(tag, {}).get("assets", [])
+        names = {a["name"] for a in assets}
         if tag not in known:
             create.append((tag, mod["name"]))
-        if asset not in {a["name"] for a in assets}:
+        if asset not in names:
             upload.append((tag, asset, data))
+        shots = []
+        for number, shot in enumerate(mod.get("shots", []), 1):
+            shot_sha = hashlib.sha256(shot["data"]).hexdigest()
+            shot_name = f"{SHOT_PREFIX}{mod['id']}-{number}-{shot_sha[:12]}{shot['extension']}"
+            if shot_name not in names:
+                upload.append((tag, shot_name, shot["data"]))
+            shots.append({
+                "url": f"https://github.com/{repository}/releases/download/{tag}/{shot_name}",
+                "sha256": shot_sha,
+                "size": len(shot["data"]),
+            })
         entries.append({
             "id": mod["id"],
             "kind": mod["kind"],
@@ -47,7 +65,11 @@ def plan(mods, releases, repository=REPOSITORY):
             "sha256": sha,
             "size": len(data),
             "homepage": f"https://github.com/{repository}/tree/main/{mod['homepage']}",
-            "installs": sum(a.get("download_count", 0) for a in assets),
+            "installs": sum(a.get("download_count", 0) for a in assets if not a["name"].startswith(SHOT_PREFIX)),
+            # официальный мод всегда с зелёной отметкой: его папку меняет только владелец
+            "verified": mod["author"] == modlib.OFFICIAL or verified.get(mod["id"], {}).get("sha256") == sha,
+            "official": mod["author"] == modlib.OFFICIAL,
+            "screenshots": shots,
         })
     entries.sort(key=lambda e: e["id"].lower())
     wanted = {f"{TAG_PREFIX}{m['id']}" for m in mods}
@@ -70,9 +92,13 @@ def main():
     for mod in mods:
         with open(os.path.join(repo, mod["main"]), "rb") as f:
             mod["data"] = f.read()
+        mod["shots"] = []
+        for shot in mod["screenshots"]:
+            with open(os.path.join(repo, shot), "rb") as f:
+                mod["shots"].append({"data": f.read(), "extension": os.path.splitext(shot)[1].lower()})
     pages = json.loads(gh("api", "--paginate", "--slurp", f"repos/{REPOSITORY}/releases?per_page=100"))
     releases = [r for page in pages for r in page]
-    entries, create, upload, stale = plan(mods, releases)
+    entries, create, upload, stale = plan(mods, releases, verified=modlib.read_verified(repo))
     for tag, name in create:
         gh("release", "create", tag, "--repo", REPOSITORY, "--title", name,
            "--notes", "Files of this mod for the Efirra mods list.", "--latest=false")
@@ -85,7 +111,7 @@ def main():
     for tag in stale:
         gh("release", "delete", tag, "--repo", REPOSITORY, "--cleanup-tag", "--yes")
     with open(out, "w", encoding="utf-8", newline="\n") as f:
-        json.dump({"mods": entries}, f, ensure_ascii=False, indent=1)
+        json.dump({"mods": entries, "revoked": modlib.read_revoked(repo)}, f, ensure_ascii=False, indent=1)
         f.write("\n")
     print(f"Mods: {len(entries)}, uploaded: {len(upload)}, removed: {len(stale)}")
     return 0

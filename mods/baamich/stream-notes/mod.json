@@ -1,0 +1,10 @@
+{
+  "kind": "panel",
+  "name": "Stream timer and notes",
+  "version": "1.0",
+  "license": "MIT",
+  "description": {
+    "en": "A stopwatch for the stream and a notes field that keeps what you type. Works offline.",
+    "ru": "Секундомер эфира и поле заметок, которое помнит написанное. Работает без интернета."
+  }
+}

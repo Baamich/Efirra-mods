@@ -1,0 +1,6 @@
+# официальные моды, правила проверки и списки владельца меняет только он
+/mods/official/ @Baamich
+/tools/ @Baamich
+/.github/ @Baamich
+/verified.json @Baamich
+/revoked.json @Baamich

@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import modlib  # noqa: E402
 
-OWNER = "Baamich"
+OWNER = modlib.OWNER
 
 
 def summary_lines(tree, mods):

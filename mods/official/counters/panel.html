@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counters</title>
+<style>
+  :root { color-scheme: dark; --bg: #10141f; --card: #161c2b; --line: #2a3145; --text: #e6ebff; --dim: #8a93ad; --accent: #4fd08a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 10px; background: var(--bg); color: var(--text); font: 14px/1.4 "Segoe UI", sans-serif; display: flex; flex-direction: column; gap: 8px; }
+  .counter { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+  .name { min-width: 0; padding: 4px 6px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text); font: 600 14px/1.3 "Segoe UI", sans-serif; }
+  .name:hover, .name:focus { border-color: var(--line); outline: none; }
+  .value { font: 600 30px/1 Bahnschrift, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; text-align: right; min-width: 2ch; }
+  .row { grid-column: 1 / -1; display: flex; gap: 6px; }
+  button { flex: 1; padding: 7px 0; border: 1px solid var(--line); border-radius: 8px; background: #1d2436; color: var(--text); font: 600 15px/1 "Segoe UI", sans-serif; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.plus { background: var(--accent); border-color: var(--accent); color: #07170f; flex: 2; }
+  button.small { flex: 0 0 auto; padding: 7px 10px; font-weight: 400; color: var(--dim); }
+  .add { padding: 8px; background: transparent; border-style: dashed; color: var(--dim); font-weight: 400; }
+</style>
+</head>
+<body>
+  <div id="list"></div>
+  <button type="button" class="add" id="add">+ Счётчик</button>
+<script>
+  // Панель живёт в отдельном браузере панелей: к программе и к файлам компьютера у неё доступа нет.
+  const en = !navigator.language.toLowerCase().startsWith('ru');
+  const words = en
+    ? { add: '+ Counter', reset: 'Reset', remove: 'Remove', first: 'Deaths', next: 'Counter' }
+    : { add: '+ Счётчик', reset: 'Сброс', remove: 'Убрать', first: 'Смерти', next: 'Счётчик' };
+  document.documentElement.lang = en ? 'en' : 'ru';
+  document.getElementById('add').textContent = words.add;
+  const KEY = 'efirra-counters';
+  const load = () => {
+    try {
+      const v = JSON.parse(localStorage.getItem(KEY));
+      if (Array.isArray(v)) return v.filter((c) => c && typeof c.name === 'string' && Number.isFinite(c.value)).slice(0, 12);
+    } catch { /* без памяти тоже работает */ }
+    return [{ name: words.first, value: 0 }];
+  };
+  let counters = load();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(counters)); } catch { /* без памяти тоже работает */ } };
+  const list = document.getElementById('list');
+  const button = (text, cls, run) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    if (cls) b.className = cls;
+    b.addEventListener('click', run);
+    return b;
+  };
+  const draw = () => {
+    list.replaceChildren();
+    counters.forEach((c, i) => {
+      const box = document.createElement('div');
+      box.className = 'counter';
+      const name = document.createElement('input');
+      name.className = 'name';
+      name.value = c.name;
+      name.maxLength = 40;
+      name.addEventListener('input', () => { c.name = name.value; save(); });
+      const value = document.createElement('div');
+      value.className = 'value';
+      value.textContent = c.value;
+      const row = document.createElement('div');
+      row.className = 'row';
+      const set = (v) => { c.value = Math.max(-99999, Math.min(99999, v)); value.textContent = c.value; save(); };
+      row.append(
+        button('−', '', () => set(c.value - 1)),
+        button('+', 'plus', () => set(c.value + 1)),
+        button(words.reset, 'small', () => set(0)),
+        button(words.remove, 'small', () => { counters.splice(i, 1); save(); draw(); }),
+      );
+      box.append(name, value, row);
+      list.append(box);
+    });
+    document.getElementById('add').hidden = counters.length >= 12;
+  };
+  document.getElementById('add').addEventListener('click', () => {
+    counters.push({ name: `${words.next} ${counters.length + 1}`, value: 0 });
+    save();
+    draw();
+  });
+  draw();
+</script>
+</body>
+</html>
