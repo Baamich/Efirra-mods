@@ -5,6 +5,24 @@ The app shows them under the **Mods** button. Русский текст ниже
 
 A mod is a Lua script, a language, a theme, an alert or a panel. Scripts run in a sandbox: no files, no network, no stream key, and only after the person agrees. A panel is one HTML page shown in a separate browser with no access to the app or the computer's files. Other code is not accepted: no DLL, EXE or VST.
 
+![The mod catalog in Efirra: marks and the question before installing](docs/images/mods-trust-en.webp)
+
+![Details of a mod: description and screenshots](docs/images/mods-details-en.webp)
+
+What people make with mods:
+
+- **Scripts** — scene switching on a timer or by the active window, quieter music in a talk scene, chat commands: a viewer writes `!tg` and the script answers with a link right in the VK or Twitch chat.
+- **Languages** — Efirra in your language. The English dictionary to translate from is in the app: Help → Documentation → Documentation folder, file `en.json`.
+- **Themes** — your colors for the whole app.
+- **Alerts** — a ready alert with pictures, clips and sounds, made in the alert builder.
+- **Panels** — a small page next to the scenes: counters, timers, notes.
+
+The full guide with every field and example is in the app: Help → Documentation → **Mods**, and Help → Documentation → **Scripts and widgets** for the script API.
+
+## Try your mod before sending it
+
+You do not need this repository to use a mod. In Efirra choose **Mods → Install from a folder** and pick the folder with `mod.json` and the main file. The app checks it by the same rules as the catalog and installs it only for you, marked **Yours**. Changed the files? Press **Re-read**. You can also pass the folder to a friend: they install it the same way.
+
 ## Add your mod
 
 Send a pull request that adds one folder for you and one folder per mod:
@@ -92,6 +110,24 @@ When a mod turns out to be dangerous, the owner revokes it (`revoked.json`). The
 Список модов для [Efirra](https://github.com/Baamich/Efirra-releases), программы для эфиров. В программе они открываются кнопкой **Моды**.
 
 Мод — это скрипт Lua, язык, тема, алерт или панель. Скрипт работает в песочнице: без файлов, сети и ключа эфира, и только после согласия человека. Панель — одна HTML-страница в отдельном браузере без доступа к программе и файлам компьютера. Другой код не принимаем: никаких DLL, EXE и VST.
+
+![Каталог модов в Efirra: галочки и вопрос перед установкой](docs/images/mods-trust-ru.webp)
+
+![Подробнее о моде: описание и снимки](docs/images/mods-details-ru.webp)
+
+Что делают модами:
+
+- **Скрипты** — смена сцен по таймеру или по активному окну, тише музыка в разговоре, команды в чате: зритель пишет `!тг`, и скрипт отвечает ссылкой прямо в чат VK или Twitch.
+- **Языки** — Efirra на вашем языке. Английский словарь для перевода лежит в программе: Справка → Документация → Папка с документацией, файл `en.json`.
+- **Темы** — свои цвета для всей программы.
+- **Алерты** — готовый алерт с картинками, роликами и звуками из конструктора алертов.
+- **Панели** — маленькая страница рядом со сценами: счётчики, таймеры, заметки.
+
+Полное руководство со всеми полями и примерами — в программе: Справка → Документация → **Моды**, а команды скриптов — в главе **Скрипты и виджеты**.
+
+## Проверить мод до отправки
+
+Чтобы пользоваться модом, этот репозиторий не нужен. В Efirra выберите **Моды → Установить из папки** и укажите папку с `mod.json` и главным файлом. Программа проверит мод теми же правилами, что и каталог, и поставит его только вам, с отметкой **Свой**. Поправили файлы — нажмите **Перечитать**. Папку можно передать другу: он поставит её так же.
 
 Главный файл: `main.lua` у скрипта, `main.json` у языка, `theme.json` у темы, `alert.efirra-alert` у алерта (конструктор алертов → **Сохранить файлом**, до 20 МБ, внутри только картинки, ролики и звуки), `panel.html` у панели (до 1 МБ). Отозванный владельцем мод (`revoked.json`) программа удаляет даже там, где он уже стоит.
 
