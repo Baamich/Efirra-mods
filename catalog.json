@@ -1,103 +1,11 @@
 {
  "mods": [
   {
-   "id": "baamich-night-sky",
-   "kind": "theme",
-   "name": "Night sky",
-   "author": "baamich",
-   "version": "1.0",
-   "license": "MIT",
-   "description": {
-    "en": "Deep night blue with a dawn accent for what is selected.",
-    "ru": "Глубокий ночной синий и рассветный акцент для выбранного."
-   },
-   "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-night-sky/baamich-night-sky-1.0-943a5f901c0f.json",
-   "sha256": "943a5f901c0ff797f677a15126b3286ae9c7cc7146b06a03571895210bbc442d",
-   "size": 159,
-   "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/night-sky",
-   "installs": 2,
-   "verified": true,
-   "official": false,
-   "screenshots": [
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-night-sky/shot-baamich-night-sky-1-e5b1ca1143d5.png",
-     "sha256": "e5b1ca1143d5fa8c3b86f7fc77ca18df8898cb291bca08fd7d77d0cf4d80fba8",
-     "size": 168597
-    },
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-night-sky/shot-baamich-night-sky-2-b9cd9340e785.png",
-     "sha256": "b9cd9340e78597177c6508930c2da36ab54009f3d62c16343f32c7f89c6d60b2",
-     "size": 141601
-    }
-   ]
-  },
-  {
-   "id": "baamich-star-alert",
-   "kind": "alert",
-   "name": "Star donation",
-   "author": "baamich",
-   "version": "1.0",
-   "license": "MIT",
-   "description": {
-    "en": "A spinning golden star with a chime, the name, the amount and the message typed out. From 500 a big pink star and a fanfare.",
-    "ru": "Вращающаяся золотая звезда со звоном, имя, сумма и сообщение по буквам. От 500 — большая розовая звезда и фанфары."
-   },
-   "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-star-alert/baamich-star-alert-1.0-02a5ac586756.efirra-alert",
-   "sha256": "02a5ac586756827e39d9b8701e7dde6e2226ef1ea52e654b007cebdf74d93a19",
-   "size": 118382,
-   "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/star-alert",
-   "installs": 2,
-   "verified": true,
-   "official": false,
-   "screenshots": [
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-star-alert/shot-baamich-star-alert-1-04b150b7ef72.png",
-     "sha256": "04b150b7ef726e2a9550a7454ea2ab951a378fc666b63b29d8574d5cf47abc8e",
-     "size": 20011
-    },
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-star-alert/shot-baamich-star-alert-2-9c5158009025.png",
-     "sha256": "9c51580090257c6968bf405cb648fb9c0b9bb20ad577a383e0178167a2505333",
-     "size": 22555
-    }
-   ]
-  },
-  {
-   "id": "baamich-stream-notes",
-   "kind": "panel",
-   "name": "Stream timer and notes",
-   "author": "baamich",
-   "version": "1.0",
-   "license": "MIT",
-   "description": {
-    "en": "A stopwatch for the stream and a notes field that keeps what you type. Works offline.",
-    "ru": "Секундомер эфира и поле заметок, которое помнит написанное. Работает без интернета."
-   },
-   "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-stream-notes/baamich-stream-notes-1.0-7d73f4b1cfc0.html",
-   "sha256": "7d73f4b1cfc014cba96e6f5baab350c70fd0f9598d37c271e1abdccf9fdba911",
-   "size": 3923,
-   "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/baamich/stream-notes",
-   "installs": 2,
-   "verified": true,
-   "official": false,
-   "screenshots": [
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-stream-notes/shot-baamich-stream-notes-1-0f432b4ca451.png",
-     "sha256": "0f432b4ca4514630b30c31d0257e8a2806df204d202ef20169aafedf9e339ca5",
-     "size": 7211
-    },
-    {
-     "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-baamich-stream-notes/shot-baamich-stream-notes-2-6241f786f5fd.png",
-     "sha256": "6241f786f5fda62690e02d224f848ccaeb54ae7e205ea11aa254a7e6b9dc6b1f",
-     "size": 9224
-    }
-   ]
-  },
-  {
    "id": "official-counters",
    "kind": "panel",
    "name": "Counters",
    "author": "official",
+   "github": "Baamich",
    "version": "1.0",
    "license": "MIT",
    "description": {
