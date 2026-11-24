@@ -31,6 +31,27 @@
      "size": 13858
     }
    ]
+  },
+  {
+   "id": "official-test",
+   "kind": "reward",
+   "name": "тест",
+   "author": "official",
+   "github": "Baamich",
+   "version": "1.0",
+   "license": "MIT",
+   "description": {
+    "en": "test",
+    "ru": "тестовый"
+   },
+   "url": "https://github.com/Baamich/Efirra-mods/releases/download/mod-official-test/official-test-1.0-70e55cc9dbe5.efirra-reward",
+   "sha256": "70e55cc9dbe55d095743ecbe1f984bc4c4be71bfd3934d423d9b9fea34432be7",
+   "size": 62465,
+   "homepage": "https://github.com/Baamich/Efirra-mods/tree/main/mods/official/test",
+   "installs": 0,
+   "verified": true,
+   "official": true,
+   "screenshots": []
   }
  ],
  "revoked": []
