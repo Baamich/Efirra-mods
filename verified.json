@@ -1,16 +1,3 @@
 {
- "mods": {
-  "baamich-night-sky": {
-   "version": "1.0",
-   "sha256": "943a5f901c0ff797f677a15126b3286ae9c7cc7146b06a03571895210bbc442d"
-  },
-  "baamich-star-alert": {
-   "version": "1.0",
-   "sha256": "02a5ac586756827e39d9b8701e7dde6e2226ef1ea52e654b007cebdf74d93a19"
-  },
-  "baamich-stream-notes": {
-   "version": "1.0",
-   "sha256": "7d73f4b1cfc014cba96e6f5baab350c70fd0f9598d37c271e1abdccf9fdba911"
-  }
- }
+ "mods": {}
 }

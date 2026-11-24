@@ -371,9 +371,12 @@ def validate_tree(root, luac=None):
                 errors.append(f"{shown}/developer.json: official mods belong to {OWNER}")
         if len(projects) > MAX_PROJECTS:
             errors.append(f"{shown}: up to {MAX_PROJECTS} mods for one developer")
+        github = info.get("github") if isinstance(info, dict) else None
         for project in projects:
             mod = check_project(root, developer, project, seen_ids, errors, luac)
             if mod:
+                # the app finds a developer's own mods by this login
+                mod["github"] = github if isinstance(github, str) else ""
                 mods.append(mod)
     return errors, mods
 

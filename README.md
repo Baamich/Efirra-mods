@@ -24,7 +24,9 @@
 
 ## Как добавить мод
 
-Пришлите pull request с папкой на себя и папкой на каждый мод:
+Проще всего — прямо из программы: **Моды → Мои моды → Войти через GitHub → Новый мод**. Efirra сама сделает копию репозитория в вашем GitHub и пришлёт pull request от вашего имени; там же мод можно изменить или убрать. Ник в каталоге — ваш логин GitHub.
+
+Вручную: пришлите pull request с папкой на себя и папкой на каждый мод:
 
 ```
 mods/
@@ -100,7 +102,7 @@ mods/
 
 ## Пожаловаться на мод
 
-[Создайте issue](https://github.com/Baamich/Efirra-mods/issues/new/choose): какой мод и в чём проблема.
+В программе: **Моды → Пожаловаться**, выберите мод и напишите, что не так. Или [создайте issue](https://github.com/Baamich/Efirra-mods/issues/new/choose): какой мод и в чём проблема.
 
 ---
 
@@ -130,7 +132,9 @@ You do not need this repository to use a mod. In Efirra choose **Mods → Instal
 
 ### Add your mod
 
-Send a pull request that adds one folder for you and one folder per mod:
+The easiest way is right in the app: **Mods → My mods → Sign in with GitHub → New mod**. Efirra makes a copy of this repository in your GitHub and sends the pull request in your name; you can change or remove the mod there too. Your name in the catalog is your GitHub login.
+
+By hand: send a pull request that adds one folder for you and one folder per mod:
 
 ```
 mods/
@@ -206,4 +210,4 @@ When a mod turns out to be dangerous, the owner revokes it (`revoked.json`). The
 
 ### Report a mod
 
-[Open an issue](https://github.com/Baamich/Efirra-mods/issues/new/choose) and name the mod and the problem.
+In the app: **Mods → Report**, pick the mod and write what is wrong. Or [open an issue](https://github.com/Baamich/Efirra-mods/issues/new/choose) and name the mod and the problem.

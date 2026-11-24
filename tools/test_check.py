@@ -64,6 +64,8 @@ class Tree(Case):
         self.assertEqual(errors, [])
         self.assertEqual(mods[0]["id"], "anna-timer")
         self.assertEqual(mods[0]["author"], "anna")
+        # the app finds its person's mods by this login
+        self.assertEqual(mods[0]["github"], "anna-gh")
 
     def test_a_good_language_passes(self):
         add_developer(self.root)
@@ -425,6 +427,9 @@ class Publish(unittest.TestCase):
         self.assertEqual(entry["installs"], 0)
         self.assertEqual(entry["size"], 9)
         self.assertNotIn("data", entry)
+        self.assertEqual(entry["github"], "")
+        entries = publish.plan([{**self.mod(), "github": "anna-gh"}], [])[0]
+        self.assertEqual(entries[0]["github"], "anna-gh")
         self.assertTrue(entry["url"].startswith(
             "https://github.com/Baamich/Efirra-mods/releases/download/mod-anna-timer/anna-timer-1.0-"))
         self.assertTrue(entry["url"].endswith(".lua"))

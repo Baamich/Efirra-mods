@@ -58,6 +58,7 @@ def plan(mods, releases, repository=REPOSITORY, verified=None):
             "kind": mod["kind"],
             "name": mod["name"],
             "author": mod["author"],
+            "github": mod.get("github", ""),
             "version": mod["version"],
             "license": mod["license"],
             "description": mod["description"],
