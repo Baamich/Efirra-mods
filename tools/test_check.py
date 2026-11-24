@@ -196,6 +196,15 @@ def alert_bytes(files=(("a.png", b"png"),), path="file:0", kind=None):
     return b"EFIRRA-ALERT 1\n" + str(len(header)).encode() + b"\n" + header + b"".join(b for _, b in files)
 
 
+def reward_bytes(header=None, alert=b"", sound=b"", script=b""):
+    import json as _json
+    header = header or {"name": "Test", "commands": ["test"], "reward": "Test", "cooldown_sec": 10,
+                        "alert": len(alert), "sound": {"name": "ding.wav", "size": len(sound)} if sound else None,
+                        "script": len(script)}
+    raw = _json.dumps(header).encode()
+    return b"EFIRRA-REWARD 1\n" + str(len(raw)).encode() + b"\n" + raw + alert + sound + script
+
+
 class Kinds(Case):
     def add(self, kind, main, content):
         add_developer(self.root)
@@ -238,6 +247,38 @@ class Kinds(Case):
     def test_a_cut_alert_is_refused(self):
         self.add("alert", "alert.efirra-alert", alert_bytes()[:-1])
         self.assert_problem("file sizes do not match")
+
+    def test_a_good_reward_passes(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes(alert=alert_bytes(), sound=b"RIFF", script=b"efirra.log('x')"))
+        errors, mods = modlib.validate_tree(self.root, luac=LUAC)
+        self.assertEqual(errors, [])
+        self.assertEqual(mods[0]["kind"], "reward")
+        self.assertTrue(mods[0]["main"].endswith("reward.efirra-reward"))
+
+    def test_a_bare_reward_passes(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes({"name": "Test"}))
+        self.assertEqual(self.errors(), [])
+
+    def test_a_reward_with_a_bad_alert_is_refused(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes(alert=alert_bytes(files=(("virus.exe", b"MZ"),))))
+        self.assert_problem("alert inside")
+
+    def test_a_reward_sound_must_be_a_sound(self):
+        bad = {"name": "Test", "sound": {"name": "run.exe", "size": 2}}
+        self.add("reward", "reward.efirra-reward", reward_bytes(bad, sound=b"MZ"))
+        self.assert_problem("must be a sound file")
+
+    def test_reward_commands_are_single_words(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes({"name": "Test", "commands": ["!two words"]}))
+        self.assert_problem("commands")
+
+    def test_a_cut_or_padded_reward_is_refused(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes(alert=alert_bytes()) + b"x")
+        self.assert_problem("part sizes do not match")
+
+    def test_a_reward_script_is_lua_source(self):
+        self.add("reward", "reward.efirra-reward", reward_bytes(script=b"\x1bLua"))
+        self.assert_problem("compiled Lua")
 
     def test_a_kind_uses_only_its_own_main_file(self):
         self.add("theme", "theme.json", "{}")

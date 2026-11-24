@@ -30,6 +30,7 @@ MAIN_FILES = {
     "theme": "theme.json",
     "alert": "alert.efirra-alert",
     "panel": "panel.html",
+    "reward": "reward.efirra-reward",
 }
 PROJECT_FILES = {"mod.json", "README.md", "LICENSE"} | set(MAIN_FILES.values())
 THEME_COLORS = ("accent", "controls", "warm", "panels", "background", "text")
@@ -40,6 +41,9 @@ ALERT_EXTENSIONS = {
     "mp3", "wav", "ogg", "m4a", "aac", "flac",
 }
 MOD_FIELDS = {"kind", "name", "version", "license", "description", "code"}
+REWARD_MAGIC = b"EFIRRA-REWARD 1\n"
+REWARD_SOUNDS = {"mp3", "wav", "ogg", "m4a", "aac", "flac"}
+MAX_REWARD_SCRIPT = 1024 * 1024
 # screenshots/1.png, 2.jpg, 3.webp…: shown in the app by number, from small to big
 SCREENSHOTS = "screenshots"
 MAX_SCREENSHOTS = 8
@@ -134,9 +138,80 @@ def alert_problem(data):
     return None
 
 
+def reward_problem(data, luac=None):
+    """What is wrong with a reward file: the same rules the app uses. None: fine.
+
+    A reward is a reward builder link: chat commands, the name of a channel points reward, a pause,
+    an alert file, its own sound and a Lua script, all optional but the name.
+    """
+    if not data.startswith(REWARD_MAGIC):
+        return "not an Efirra reward file (take it from the reward builder in My mods)"
+    rest = data[len(REWARD_MAGIC):]
+    line_end = rest.find(b"\n")
+    if line_end < 1 or line_end > 12:
+        return "broken header"
+    try:
+        length = int(rest[:line_end])
+        header = json.loads(rest[line_end + 1:line_end + 1 + length].decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return "broken header"
+    if length > 64 * 1024 or not isinstance(header, dict):
+        return "broken header"
+    body = rest[line_end + 1 + length:]
+    name = header.get("name")
+    if not is_clean(name, 100) or name.strip() != name:
+        return "the reward needs a name, one line up to 100 characters"
+    commands = header.get("commands", [])
+    if not isinstance(commands, list) or len(commands) > 10 or not all(
+        isinstance(c, str) and 0 < len(c) <= 100 and not c.startswith("!")
+        and not any(ch.isspace() or ord(ch) < 32 for ch in c)
+        for c in commands
+    ):
+        return "commands: up to 10 single words without !"
+    reward = header.get("reward", "")
+    if not isinstance(reward, str) or len(reward) > 100 or any(ord(c) < 32 for c in reward):
+        return "the channel points reward name is one line up to 100 characters"
+    cooldown = header.get("cooldown_sec", 0)
+    if not isinstance(cooldown, int) or not 0 <= cooldown <= 3600:
+        return "the pause is from 0 to 3600 seconds"
+    alert, script, sound = header.get("alert", 0), header.get("script", 0), header.get("sound")
+    if not isinstance(alert, int) or alert < 0 or not isinstance(script, int) or not 0 <= script <= MAX_REWARD_SCRIPT:
+        return "broken header"
+    sound_size = 0
+    if sound is not None:
+        if not isinstance(sound, dict) or not isinstance(sound.get("name"), str) or not isinstance(sound.get("size"), int) or sound["size"] <= 0:
+            return "broken sound"
+        if os.path.splitext(sound["name"])[1].lstrip(".").lower() not in REWARD_SOUNDS:
+            return f"{sound['name']}: the reward sound must be a sound file"
+        sound_size = sound["size"]
+    if len(body) != alert + sound_size + script:
+        return "part sizes do not match the header"
+    if alert:
+        problem = alert_problem(body[:alert])
+        if problem:
+            return f"alert inside: {problem}"
+    if script:
+        text = body[alert + sound_size:]
+        if text[:1] == b"\x1b":
+            return "compiled Lua is not accepted, send the source"
+        try:
+            text.decode("utf-8")
+        except UnicodeDecodeError:
+            return "the script must be UTF-8 text"
+        if luac:
+            with tempfile.TemporaryDirectory() as folder:
+                path = os.path.join(folder, "reward.lua")
+                with open(path, "wb") as f:
+                    f.write(text)
+                problem = lua_syntax_problem(path, luac)
+            if problem:
+                return f"script inside: {problem}"
+    return None
+
+
 def check_main_file(path, kind, code, errors, shown, luac):
     size = os.path.getsize(path)
-    limit = MAX_ALERT_FILE if kind == "alert" else MAX_FILE
+    limit = MAX_ALERT_FILE if kind in ("alert", "reward") else MAX_FILE
     if size == 0 or size > limit:
         errors.append(f"{shown}: size must be from 1 byte to {limit // (1024 * 1024)} MB")
         return
@@ -144,6 +219,11 @@ def check_main_file(path, kind, code, errors, shown, luac):
         data = f.read()
     if kind == "alert":
         problem = alert_problem(data)
+        if problem:
+            errors.append(f"{shown}: {problem}")
+        return
+    if kind == "reward":
+        problem = reward_problem(data, luac)
         if problem:
             errors.append(f"{shown}: {problem}")
         return

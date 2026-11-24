@@ -2,7 +2,7 @@
 
 Список модов для [Efirra](https://github.com/Baamich/Efirra-releases), программы для эфиров. В программе они открываются кнопкой **Моды**. [English below](#english)
 
-Мод — это скрипт Lua, язык, тема, алерт или панель. Скрипт работает в песочнице: без файлов, сети и ключа эфира, и только после согласия человека. Панель — одна HTML-страница в отдельном браузере без доступа к программе и файлам компьютера. Другой код не принимаем: никаких DLL, EXE и VST.
+Мод — это скрипт Lua, язык, тема, алерт, панель или награда. Скрипт работает в песочнице: без файлов, сети и ключа эфира, и только после согласия человека. Панель — одна HTML-страница в отдельном браузере без доступа к программе и файлам компьютера. Другой код не принимаем: никаких DLL, EXE и VST.
 
 ![Каталог модов в Efirra: галочки и вопрос перед установкой](docs/images/mods-trust-ru.webp)
 
@@ -15,6 +15,7 @@
 - **Темы** — свои цвета для всей программы.
 - **Алерты** — готовый алерт с картинками, роликами и звуками из конструктора алертов.
 - **Панели** — маленькая страница рядом со сценами: счётчики, таймеры, заметки.
+- **Награды** — готовая связка конструктора наград: команды чата вроде `!огонь`, название награды за баллы, алерт, свой звук и скрипт. После установки команды работают сразу, а награду за баллы с тем же названием стример создаёт на Twitch или VK сам.
 
 Полное руководство со всеми полями и примерами — в программе: Справка → Документация → **Моды**, а команды скриптов — в главе **Скрипты и виджеты**.
 
@@ -40,6 +41,7 @@ mods/
                         theme.json          тема
                         alert.efirra-alert  алерт (конструктор алертов → «Сохранить файлом»)
                         panel.html          панель
+                        reward.efirra-reward награда (конструктор наград → «Сохранить файлом»)
       README.md       по желанию
       LICENSE         по желанию
       screenshots/    по желанию: 1.png, 2.jpg, 3.webp…
@@ -65,7 +67,7 @@ mods/
 }
 ```
 
-`kind` — `script`, `language`, `theme`, `alert` или `panel`. У языка ещё `"code": "de"`. При каждом изменении главного файла поднимайте `version`.
+`kind` — `script`, `language`, `theme`, `alert`, `panel` или `reward`. У языка ещё `"code": "de"`. При каждом изменении главного файла поднимайте `version`.
 
 Тема — шесть цветов и скругление:
 
@@ -110,7 +112,7 @@ mods/
 
 The list of mods for [Efirra](https://github.com/Baamich/Efirra-releases), an app for live streams. The app shows them under the **Mods** button.
 
-A mod is a Lua script, a language, a theme, an alert or a panel. Scripts run in a sandbox: no files, no network, no stream key, and only after the person agrees. A panel is one HTML page shown in a separate browser with no access to the app or the computer's files. Other code is not accepted: no DLL, EXE or VST.
+A mod is a Lua script, a language, a theme, an alert, a panel or a reward. Scripts run in a sandbox: no files, no network, no stream key, and only after the person agrees. A panel is one HTML page shown in a separate browser with no access to the app or the computer's files. Other code is not accepted: no DLL, EXE or VST.
 
 ![The mod catalog in Efirra: marks and the question before installing](docs/images/mods-trust-en.webp)
 
@@ -123,6 +125,7 @@ What people make with mods:
 - **Themes** — your colors for the whole app.
 - **Alerts** — a ready alert with pictures, clips and sounds, made in the alert builder.
 - **Panels** — a small page next to the scenes: counters, timers, notes.
+- **Rewards** — a ready link of the reward builder: chat commands like `!fire`, a channel points reward name, an alert, its own sound and a script. The commands work right after installing; the streamer creates the channel points reward with the same name on Twitch or VK.
 
 The full guide with every field and example is in the app: Help → Documentation → **Mods**, and Help → Documentation → **Scripts and widgets** for the script API.
 
@@ -148,6 +151,7 @@ mods/
                         theme.json          a theme
                         alert.efirra-alert  an alert (Save as a file in the alert builder)
                         panel.html          a panel
+                        reward.efirra-reward a reward (Save as a file in the reward builder)
       README.md       optional
       LICENSE         optional
       screenshots/    optional: 1.png, 2.jpg, 3.webp…
@@ -173,7 +177,7 @@ Folder names: lowercase `a-z`, `0-9` and `-`, starting with a letter. `your-name
 }
 ```
 
-`kind` is `script`, `language`, `theme`, `alert` or `panel`. A language also has `"code": "de"`. Raise `version` whenever the main file changes.
+`kind` is `script`, `language`, `theme`, `alert`, `panel` or `reward`. A language also has `"code": "de"`. Raise `version` whenever the main file changes.
 
 A theme is six colors and a corner radius:
 
