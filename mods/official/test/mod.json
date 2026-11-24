@@ -1,0 +1,10 @@
+{
+  "description": {
+    "en": "test",
+    "ru": "тестовый"
+  },
+  "kind": "reward",
+  "license": "MIT",
+  "name": "тест",
+  "version": "1.0"
+}
